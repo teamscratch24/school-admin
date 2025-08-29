@@ -1,7 +1,7 @@
 
 const EventModel = require("../Model/EventModel");
 const GalleryModel = require("../Model/Gallery");
-const { UploadImageToS3 } = require("../aws/config");
+const { UploadImageToS3 } = require("../cloud/config");
 const { nanoid } = require("nanoid");
 const { textRegex, dateRegex, timeRegex } = require("../utils/Regex");
 

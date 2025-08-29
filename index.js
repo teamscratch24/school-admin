@@ -8,6 +8,7 @@ const fileUpload = require('express-fileupload');
 const authRouter = require("./Routers/AuthRouter");
 const EventRouter = require("./Routers/EventRouter");
 const AdminRouter = require("./Routers/AdminRouter");
+const AnnoncementRouter = require("./Component/Annoncement");
 const cors = require("cors");
 const helmet = require("helmet");
 const AuthCheck = require("./Middlewere/AuthMiddle");
@@ -17,7 +18,9 @@ const app = express();
 const port = 5000 || process.env.PORT ;
 
 app.use(cors())
-app.use(fileUpload());
+app.use(fileUpload({
+  limits: { fileSize: 50 * 1024 * 1024 }
+}));
 app.use(helmet())
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -43,6 +46,7 @@ const apiLimiter = rateLimit({
 app.use("/api/admin/login",loginLimiter,authRouter); 
 app.use("/api/admin/event",apiLimiter,EventRouter);   
 app.use("/api/admin",loginLimiter,AuthCheck,AdminRouter); 
+app.use("/api/admin/announcements", AnnoncementRouter);
 
 
 
