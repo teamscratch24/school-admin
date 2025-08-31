@@ -1,11 +1,13 @@
-const { CreateEvent, getGalleryWithEvent, addGalleryImage, removeGalleryImage, getEvent, getGalleryImages, deleteEvent } = require('../Component/EventCard');
+const { get } = require('mongoose');
+const { CreateEvent, getGalleryWithEventId, addGalleryImage, removeGalleryImage, getEvent, getGalleryImages, deleteEvent } = require('../Component/EventCard');
 const AuthCheck = require('../Middlewere/AuthMiddle');
 
 const router = require('express').Router();
 
 
 router.get("/", getEvent);
-router.post("/gallerywithid",getGalleryWithEvent)
+router.get("/gallery/images",getGalleryImages)
+router.post("/gallerywithid",getGalleryWithEventId)
 router.post("/create",AuthCheck, CreateEvent);
 router.post("/delete", AuthCheck,deleteEvent);
 router.post("/gallery/add",AuthCheck,addGalleryImage)

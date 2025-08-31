@@ -6,14 +6,12 @@ const AuthCheck = require("../Middlewere/AuthMiddle.js");
 
 router.get("/", async (req, res) => {
     try {
-        
         const announcements = await Announcement.find({},{message:1,_id:1}).sort({ createdAt: -1});
         if(announcements.length === 0){
             return res.status(200).json([]);
         }
         res.status(200).json(announcements);
-    } catch (error) {
-        console.log("Error fetching announcements:", error.message);  
+    } catch (error) { 
         res.status(500).json({ msg: "Server Error" });  
     }
 });

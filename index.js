@@ -45,8 +45,8 @@ const apiLimiter = rateLimit({
 
 app.use("/api/admin/login",loginLimiter,authRouter); 
 app.use("/api/admin/event",apiLimiter,EventRouter);   
+app.use("/api/admin/announcements",apiLimiter, AnnoncementRouter);
 app.use("/api/admin",loginLimiter,AuthCheck,AdminRouter); 
-app.use("/api/admin/announcements", AnnoncementRouter);
 
 
 

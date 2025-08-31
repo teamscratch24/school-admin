@@ -1,7 +1,7 @@
 
 const EventModel = require("../Model/EventModel");
 const GalleryModel = require("../Model/Gallery");
-const { UploadImageToS3 } = require("../cloud/config");
+const { UploadImageToS3 , getSignedUrlFromS3 } = require("../cloud/config");
 const { nanoid } = require("nanoid");
 const { textRegex, dateRegex, timeRegex } = require("../utils/Regex");
 
@@ -64,9 +64,11 @@ const deleteEvent = async (req, res) => {
     }
 
    await EventModel.findOneAndDelete({_id:eventId}),
+   await GalleryModel.findOneAndDelete({eventId});
 
     res.status(200).json({ msg: "Event deleted successfully" });
   } catch (error) {
+
     res.status(500).json({ msg: "Internal server error" });
   }
 };
@@ -75,13 +77,21 @@ const getEvent = async (req, res) => {
 
   try {
     const events = await EventModel.find().sort({ date: -1 });
-    if (!events || events.length === 0) {
-      return res.status(404).json({ msg: "No events found" });
+
+     if (!events || events.length === 0) {
+      return res.status(200).json([]);
     }
 
-    res.status(200).json(events);
+    const data = await Promise.all(
+      events.map(async (key) => {
+        const url = await getSignedUrlFromS3(key?.eventImage);
+        return { ...key._doc, eventImage:url };
+      
+      })
+    );
+
+    res.status(200).json(data);
   } catch (error) {
-    console.error("Get events error:", error);
     res.status(500).json({ msg: "Internal server error" });
   }
 };
@@ -133,30 +143,33 @@ const addGalleryImage = async (req, res) => {
   }
 };
 
-const getGalleryWithEvent = async (req, res) => {
+const getGalleryWithEventId = async (req, res) => {
   try {
     let { eventId } = req.body;
 
     if (!eventId) {
       return res.status(400).json({ msg: "Event ID is required" });
     }
-    
-
     const result = await GalleryModel.findOne({ eventId }).select("-_id")
       .populate("eventId", "title date")
       .lean();
-
-
-
     if (!result) {
       return res.status(404).json({ msg: "Gallery not found" });
     }
 
+    const images = await Promise.all(
+      result?.images.map(async (image) => {
+        const url = await getSignedUrlFromS3(image?.url);
+        return { ...image, url };
+      })
+    );
+
+  
     const gallery = {
       eventId: result?.eventId?._id,
       title: result?.eventId?.title,
       date: result?.eventId?.date,
-      images: [...result?.images],
+      images: [...images],
     };
 
     return res.status(200).json({value:gallery});
@@ -174,7 +187,16 @@ const getGalleryImages = async (req, res) => {
       { $project: { _id: 0, url: "$images.url" } },
     ]);
 
-    return randomImages;
+    const urls = await Promise.all(
+      randomImages.map(async (key) => {
+        const url = await getSignedUrlFromS3(key?.url);
+        return url;
+      
+      })
+    );
+
+    return res.status(200).json({ images: urls });
+
   } catch (error) {
     return res.status(500).json({ msg: "Internel serer error" });
   }
@@ -212,7 +234,7 @@ const removeGalleryImage = async (req, res) => {
 module.exports = {
   CreateEvent,
   deleteEvent,
-  getGalleryWithEvent,
+  getGalleryWithEventId,
   getGalleryImages,
   addGalleryImage,
   removeGalleryImage,
