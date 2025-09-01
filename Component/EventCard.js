@@ -181,19 +181,26 @@ const getGalleryWithEventId = async (req, res) => {
 
 const getGalleryImages = async (req, res) => {
   try {
-    const randomImages = await GalleryModel.aggregate([
-      { $unwind: "$images" },
-      { $sample: { size: 8 } },
-      { $project: { _id: 0, url: "$images.url" } },
-    ]);
+  
+  const randomImages = await GalleryModel.aggregate([
+  { $unwind: "$images" },
+  {
+    $project: {
+      _id: 0,               
+      id: "$images.id",     
+      url: "$images.url"   
+    }
+  }
+  ]);
 
     const urls = await Promise.all(
       randomImages.map(async (key) => {
         const url = await getSignedUrlFromS3(key?.url);
-        return url;
+        return{ ...key, url };
       
       })
     );
+
 
     return res.status(200).json({ images: urls });
 
