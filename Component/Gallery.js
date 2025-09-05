@@ -49,7 +49,7 @@ router.post("/add", AuthCheck, async (req, res) => {
 router.get("/all", async (req, res) => {
   try {
 
-    const randomImages = await LandingGalleryModel.aggregate([
+  const randomImages = await LandingGalleryModel.aggregate([
   { $unwind: "$images" },
   {
     $project: {
@@ -67,7 +67,6 @@ router.get("/all", async (req, res) => {
       })
     );
 
-  
     return res.status(200).json({ images: urls });
 
   } catch (error) {
